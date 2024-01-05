@@ -77,7 +77,7 @@ def get_ticker_list(ticker_list, logger=None):
 		logger.debug("Found %d tickers in list" % num_tickers)
 
 	#Return tickers
-	return ticker_strs, num_tickers
+	return sorted(ticker_strs), num_tickers
 
 ################################################################################
 ###                                Class Def                                 ###
@@ -176,16 +176,21 @@ class Daily_Aggregator:
 			LOGGER.debug("First time calling update on this ticker so " \
 						 + "initializing arrays")
 			cur_ticker = yf.Ticker(cur_ticker_str)
+			time.sleep(YF_SEC_BETWEEN_REQS)
 			self.tickers[idx] = cur_ticker
 
 			#Download a month of data to initialize the arrays
 			data = cur_ticker.history(period="%dd" % (2 * ROLLING_BUF_DAYS))
-			self.prices[idx,:,0] = data['Open'].to_numpy()[-ROLLING_BUF_DAYS:]
-			self.prices[idx,:,1] = data['Close'].to_numpy()[-ROLLING_BUF_DAYS:]
-			self.prices[idx,:,2] = data['High'].to_numpy()[-ROLLING_BUF_DAYS:]
-			self.prices[idx,:,3] = data['Low'].to_numpy()[-ROLLING_BUF_DAYS:]
-			self.prices[idx,:,4] = data['Volume'].to_numpy()[-ROLLING_BUF_DAYS:]
-			self.dates[idx,:,:] = np.array([(x.year, x.month, x.day) for x in data.index.to_pydatetime()][-ROLLING_BUF_DAYS:])
+			chunk_size = ROLLING_BUF_DAYS
+			if data['Open'].to_numpy().size < chunk_size:
+				chunk_size = data['Open'].to_numpy().size
+				LOGGER.debug("Got less than desired chunk size, got %d" % chunk_size)
+			self.prices[idx,:,0] = data['Open'].to_numpy()[-chunk_size:]
+			self.prices[idx,:,1] = data['Close'].to_numpy()[-chunk_size:]
+			self.prices[idx,:,2] = data['High'].to_numpy()[-chunk_size:]
+			self.prices[idx,:,3] = data['Low'].to_numpy()[-chunk_size:]
+			self.prices[idx,:,4] = data['Volume'].to_numpy()[-chunk_size:]
+			self.dates[idx,:,:] = np.array([(x.year, x.month, x.day) for x in data.index.to_pydatetime()][-chunk_size:])
 			updated = True
 		else:
 			#This is not the first time calling this function on this ticker 
@@ -222,7 +227,10 @@ class Daily_Aggregator:
 		finance api limit
 		"""
 		for ii in range(self.num_tickers):
-			self._update_ticker(ii)
+			try:
+				self._update_ticker(ii)
+			except Exception as e:
+				LOGGER.exception(e)
 			time.sleep(YF_SEC_BETWEEN_REQS)
 
 	############################################################################
@@ -335,7 +343,7 @@ if __name__ == "__main__":
 	#Create aggregator
 	print("Creating daily aggregator and looping through tickers to " \
 		  + "initialize data...")
-	agg = Daily_Aggregator(ticker_list_fname)
+	agg = Daily_Aggregator(['AAPL'])#ticker_list_fname)
 
 	#Run aggregator
 	print("Running daily aggregator. Stop with 'ctrl-c...")
