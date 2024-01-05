@@ -181,16 +181,22 @@ class Daily_Aggregator:
 
 			#Download a month of data to initialize the arrays
 			data = cur_ticker.history(period="%dd" % (2 * ROLLING_BUF_DAYS))
-			chunk_size = ROLLING_BUF_DAYS
-			if data['Open'].to_numpy().size < chunk_size:
+			if data['Open'].to_numpy().size < ROLLING_BUF_DAYS:
 				chunk_size = data['Open'].to_numpy().size
 				LOGGER.debug("Got less than desired chunk size, got %d" % chunk_size)
-			self.prices[idx,:,0] = data['Open'].to_numpy()[-chunk_size:]
-			self.prices[idx,:,1] = data['Close'].to_numpy()[-chunk_size:]
-			self.prices[idx,:,2] = data['High'].to_numpy()[-chunk_size:]
-			self.prices[idx,:,3] = data['Low'].to_numpy()[-chunk_size:]
-			self.prices[idx,:,4] = data['Volume'].to_numpy()[-chunk_size:]
-			self.dates[idx,:,:] = np.array([(x.year, x.month, x.day) for x in data.index.to_pydatetime()][-chunk_size:])
+				self.prices[idx,-chunk_size:,0] = data['Open'].to_numpy()
+				self.prices[idx,-chunk_size:,1] = data['Close'].to_numpy()
+				self.prices[idx,-chunk_size:,2] = data['High'].to_numpy()
+				self.prices[idx,-chunk_size:,3] = data['Low'].to_numpy()
+				self.prices[idx,-chunk_size:,4] = data['Volume'].to_numpy()
+				self.dates[idx,-chunk_size:,:] = np.array([(x.year, x.month, x.day) for x in data.index.to_pydatetime()])
+			else:
+				self.prices[idx,:,0] = data['Open'].to_numpy()[-ROLLING_BUF_DAYS:]
+				self.prices[idx,:,1] = data['Close'].to_numpy()[-ROLLING_BUF_DAYS:]
+				self.prices[idx,:,2] = data['High'].to_numpy()[-ROLLING_BUF_DAYS:]
+				self.prices[idx,:,3] = data['Low'].to_numpy()[-ROLLING_BUF_DAYS:]
+				self.prices[idx,:,4] = data['Volume'].to_numpy()[-ROLLING_BUF_DAYS:]
+				self.dates[idx,:,:] = np.array([(x.year, x.month, x.day) for x in data.index.to_pydatetime()][-ROLLING_BUF_DAYS:])
 			updated = True
 		else:
 			#This is not the first time calling this function on this ticker 
@@ -346,11 +352,11 @@ if __name__ == "__main__":
 	print("Creating daily aggregator and looping through tickers to " \
 		  + "initialize data...")
 	if args.debug:
-		agg = Daily_Aggregator(['AAPL'])#ticker_list_fname)
 		LOGGER.info("Starting daily aggregator in debug mode")
+		agg = Daily_Aggregator(['AAPL'])
 	else:
-		agg = Daily_Aggregator(ticker_list_fname)
 		LOGGER.info("Starting daily aggregator with full local list")
+		agg = Daily_Aggregator(ticker_list_fname)
 
 	#Run aggregator
 	print("Running daily aggregator. Stop with 'ctrl-c...")
