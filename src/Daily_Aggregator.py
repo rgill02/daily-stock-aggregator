@@ -335,7 +335,7 @@ if __name__ == "__main__":
 	#Create aggregator
 	print("Creating daily aggregator and looping through tickers to " \
 		  + "initialize data...")
-	agg = Daily_Aggregator(["AAPL"])#ticker_list_fname)
+	agg = Daily_Aggregator(ticker_list_fname)
 
 	#Run aggregator
 	print("Running daily aggregator. Stop with 'ctrl-c...")
