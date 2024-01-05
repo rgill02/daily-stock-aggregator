@@ -143,6 +143,14 @@ class Daily_Aggregator:
 		:type dates: ndarray
 		"""
 		LOGGER.debug("Publishing data for ticker %s" % ticker_str)
+
+		#Remove any unitialized values
+		idxs_to_rmv = np.where(dates[:,0] == 0)[0]
+		if idxs_to_rmv.size > 0:
+			prices = np.delete(prices, idxs_to_rmv, axis=0)
+			dates = np.delete(dates, idxs_to_rmv, axis=0)
+
+		#Publish data
 		payload = (
 			ticker_str,
 			base64.b64encode(pickle.dumps(prices)).decode('ascii'),
