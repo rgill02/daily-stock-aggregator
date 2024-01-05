@@ -182,6 +182,9 @@ class Daily_Aggregator:
 			#Download a month of data to initialize the arrays
 			data = cur_ticker.history(period="%dd" % (2 * ROLLING_BUF_DAYS))
 			if data['Open'].to_numpy().size < ROLLING_BUF_DAYS:
+				if data['Open'].to_numpy().size == 0:
+					LOGGER.debug("Got 0 stock data so skipping this ticker")
+					return
 				chunk_size = data['Open'].to_numpy().size
 				LOGGER.debug("Got less than desired chunk size, got %d" % chunk_size)
 				self.prices[idx,-chunk_size:,0] = data['Open'].to_numpy()
