@@ -328,6 +328,8 @@ if __name__ == "__main__":
 	parser.add_argument("-c", "--config_fname", help=help_str)
 	help_str = "Set console log output to verbose (useful for debugging)"
 	parser.add_argument("-v", "--verbose", action="store_true", help=help_str)
+	help_str = "Sets ticker list to only one ticker to help with debugging"
+	parser.add_argument("-d", "--debug", action="store_true", help=help_str)
 	args = parser.parse_args()
 
 	#Setup logging
@@ -343,7 +345,12 @@ if __name__ == "__main__":
 	#Create aggregator
 	print("Creating daily aggregator and looping through tickers to " \
 		  + "initialize data...")
-	agg = Daily_Aggregator(['AAPL'])#ticker_list_fname)
+	if args.debug:
+		agg = Daily_Aggregator(['AAPL'])#ticker_list_fname)
+		LOGGER.info("Starting daily aggregator in debug mode")
+	else:
+		agg = Daily_Aggregator(ticker_list_fname)
+		LOGGER.info("Starting daily aggregator with full local list")
 
 	#Run aggregator
 	print("Running daily aggregator. Stop with 'ctrl-c...")
