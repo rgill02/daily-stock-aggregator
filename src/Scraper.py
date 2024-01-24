@@ -198,7 +198,7 @@ class Scraper:
 
 		#By this point we have a list of strings representing tickers. Cast it 
 		#to a set and then back to a list to make sure there are no repeats
-		ticker_strs = list(set(ticker_list))
+		ticker_strs = [x.upper() for x in list(set(ticker_list))]
 		if logger is not None:
 			logger.debug("Found %d tickers in list" % len(ticker_strs))
 
@@ -333,6 +333,13 @@ class Scraper:
 		Pulls the data for both the market tickers (if applicable) and the 
 		daily tickers
 		"""
+		#Send starting pull message
+		self.sock.send_string("STARTING_PULL")
+
+		#Pull the data for the daily tickers
+		LOGGER.info("Pulling daily data")
+		self._update_tickers(False)
+
 		#Check if we should pull the data for the market tickers by checking if 
 		#market is open
 		cur_time = datetime.datetime.now(EASTERN_TZ)
@@ -353,9 +360,8 @@ class Scraper:
 			self._update_tickers(True)
 			self.have_done_mkt_close_pull = True
 
-		#Pull the data for the daily tickers
-		LOGGER.info("Pulling daily data")
-		self._update_tickers(False)
+		#Send ending pull message
+		self.sock.send_string("ENDING_PULL")
 
 	############################################################################
 	def run(self):
@@ -420,6 +426,8 @@ class Scraper:
 				self._pull_data()
 			except Exception as e:
 				LOGGER.exception(e)
+				#Send ending pull message
+				self.sock.send_string("ENDING_PULL")
 			LOGGER.debug("Done pulling data")
 
 			#Compute next time to pull data
