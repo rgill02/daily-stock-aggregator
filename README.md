@@ -136,10 +136,9 @@ _For more examples, please refer to the [Documentation](https://github.com/rgill
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Implement Scraper
-- [ ] Launch My Daily Scraper
+- [x] Implement Scraper
+- [x] Launch My Daily Scraper - 157.230.14.139:21000
 - [ ] Implement Listener
-- [ ] Implement Database
 - [ ] Create user manual / tutorial
 - [ ] Update README
 
